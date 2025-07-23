@@ -21,9 +21,9 @@ unsigned long timeStamps[SENSOR_COUNT];
 float velocities[SENSOR_COUNT - 1];
 bool triggered[SENSOR_COUNT] = {};
 
-constexpr float r_bola = 1.5;
-constexpr float rho_fluida = 1.28;
-constexpr float rho_bola = 7.8;
+constexpr float r_bola = 0.5e-3;
+constexpr float rho_fluida = 1260;
+constexpr float rho_bola = 7850;
 constexpr float gravity = 9.8;
 
 constexpr uint8_t pinOf(InputDevice sp) { return static_cast<uint8_t>(sp); }
