@@ -30,6 +30,10 @@ constexpr uint8_t pinOf(InputDevice sp) { return static_cast<uint8_t>(sp); }
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+void resetExperiment();
+
+void printResults();
+
 void setup()
 {
   Serial.begin(9600);
@@ -69,7 +73,7 @@ void loop()
   for (size_t i = 0; i < SENSOR_COUNT; ++i)
   {
     bool input = !(digitalRead(pinOf(static_cast<InputDevice>(i))));
-    if (i = 3)
+    if (i == 3)
       input = !input;
     states[i] = input;
   }
@@ -111,14 +115,14 @@ void resetExperiment()
 void printResults()
 {
   Serial.println("START_DATA");
-  for (int i = 0; i < SENSOR_COUNT; i++)
+  for (size_t i = 0; i < SENSOR_COUNT; i++)
   {
     Serial.print("t");
     Serial.print(i + 1);
     Serial.print(": ");
     Serial.println(timeStamps[i]);
   }
-  for (int i = 0; i < 5; i++)
+  for (size_t i = 0; i < SENSOR_COUNT - 2; i++)
   {
     Serial.print("v");
     Serial.print(i + 1);
