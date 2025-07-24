@@ -13,7 +13,7 @@ enum InputDevice : uint8_t
   PushButton = 12,
 };
 
-constexpr uint16_t DISTANCES_MM[] = {3000, 6000, 9000, 12000, 15000};
+constexpr uint16_t DISTANCES_MM[] = {0, 300, 600, 800, 1000, 12000};
 constexpr uint16_t SENSOR_COUNT =
     sizeof(DISTANCES_MM) / sizeof(DISTANCES_MM[0]);
 
@@ -72,9 +72,9 @@ void loop()
   bool states[SENSOR_COUNT];
   for (size_t i = 0; i < SENSOR_COUNT; ++i)
   {
-    bool input = !(digitalRead(pinOf(static_cast<InputDevice>(i))));
-    if (i == 3)
-      input = !input;
+    bool input = (digitalRead(pinOf(static_cast<InputDevice>(i))));
+    if (i < 3)
+      states[i] = !input;
     states[i] = input;
   }
 
