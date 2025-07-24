@@ -13,7 +13,7 @@ enum InputDevice : uint8_t
   PushButton = 11,
 };
 
-constexpr uint16_t DISTANCES_MM[] = {0, 300, 600, 800, 1000, 12000};
+constexpr uint16_t DISTANCES_MM[] = {0, 3, 4, 5, 6, 7};
 constexpr uint16_t SENSOR_COUNT =
     sizeof(DISTANCES_MM) / sizeof(DISTANCES_MM[0]);
 constexpr int Sensors[] = {InputDevice::Sensor1, InputDevice::Sensor2, InputDevice::Sensor3,
@@ -130,7 +130,7 @@ void loop()
       {
         size_t idx = i - 1;
         velocities[idx] = float(DISTANCES_MM[idx]) /
-                          ((timeStamps[i] - timeStamps[i - 1]) * 1e-6);
+                          ((timeStamps[i] - timeStamps[i - 1]));
       }
       if (i == SENSOR_COUNT - 1)
       {
