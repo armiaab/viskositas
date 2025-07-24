@@ -16,7 +16,8 @@ enum InputDevice : uint8_t
 constexpr uint16_t DISTANCES_MM[] = {0, 300, 600, 800, 1000, 12000};
 constexpr uint16_t SENSOR_COUNT =
     sizeof(DISTANCES_MM) / sizeof(DISTANCES_MM[0]);
-constexpr int Sensors[] = {InputDevice::Sensor1, InputDevice::Sensor2, InputDevice::Sensor3, InputDevice::Sensor4, InputDevice::Sensor5, InputDevice::Sensor6};
+constexpr int Sensors[] = {InputDevice::Sensor1, InputDevice::Sensor2, InputDevice::Sensor3,
+                           InputDevice::Sensor4, InputDevice::Sensor5, InputDevice::Sensor6};
 
 unsigned long timeStamps[SENSOR_COUNT];
 float velocities[SENSOR_COUNT - 1];
@@ -115,7 +116,8 @@ void loop()
     bool input = digitalRead(Sensors[i]);
     if (i < 3)
       states[i] = !input;
-    states[i] = input;
+    else
+      states[i] = input;
   }
 
   for (size_t i = 0; i < SENSOR_COUNT; i++)
