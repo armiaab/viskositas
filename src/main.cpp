@@ -122,7 +122,7 @@ void printResults()
     Serial.print(": ");
     Serial.println(timeStamps[i]);
   }
-  for (size_t i = 0; i < SENSOR_COUNT - 2; i++)
+  for (size_t i = 0; i < SENSOR_COUNT - 1; i++)
   {
     Serial.print("v");
     Serial.print(i + 1);
