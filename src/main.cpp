@@ -13,9 +13,9 @@ enum InputDevice : uint8_t
   PushButton = 11,
 };
 
-constexpr float DISTANCES_MM[] = {0, 14, 7, 7, 5, 4.4};
+constexpr float DISTANCESCM[] = {0, 14, 21, 28, 33, 37.4};
 constexpr uint16_t SENSOR_COUNT =
-    sizeof(DISTANCES_MM) / sizeof(DISTANCES_MM[0]);
+    sizeof(DISTANCESCM) / sizeof(DISTANCESCM[0]);
 constexpr int Sensors[] = {InputDevice::Sensor1, InputDevice::Sensor2, InputDevice::Sensor3,
                            InputDevice::Sensor4, InputDevice::Sensor5, InputDevice::Sensor6};
 
@@ -24,8 +24,8 @@ float velocities[SENSOR_COUNT - 1];
 bool triggered[SENSOR_COUNT] = {};
 
 constexpr float r_bola = 0.5e-3;
-constexpr float rho_fluida = 1260;
-constexpr float rho_bola = 7850;
+constexpr float rho_fluida = 1260.0;
+constexpr float rho_bola = 7850.0;
 constexpr float gravity = 9.8;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -47,21 +47,23 @@ void PrintResults()
     Serial.print(": ");
     Serial.println(timeStamps[i]);
   }
+  float sum = 0;
   for (size_t i = 0; i < SENSOR_COUNT - 1; i++)
   {
     Serial.print("v");
     Serial.print(i + 1);
     Serial.print(": ");
     Serial.println(velocities[i], 2);
+    sum += velocities[i];
   }
   Serial.println("END_DATA");
 
-  float sum = 0;
-  for (auto &v : velocities)
-    sum += v;
   float v_avg = sum / (SENSOR_COUNT - 1);
-
-  float viscosity = 2 / 9 * gravity * r_bola * r_bola * (rho_bola - rho_fluida) / v_avg;
+  float viscosity = (2.0 / 9.0) * gravity * (r_bola * r_bola) * (rho_bola - rho_fluida) / v_avg;
+  Serial.print("V rata-rata: ");
+  Serial.println(v_avg, 2);
+  Serial.print("Viscositas: ");
+  Serial.println(viscosity, 2);
 
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -118,7 +120,6 @@ void loop()
       states[i] = !input;
     else
       states[i] = input;
-    delay(10);
   }
 
   elapsed = micros() - startTime;
@@ -132,7 +133,9 @@ void loop()
       if (i > 0)
       {
         size_t idx = i - 1;
-        velocities[idx] = DISTANCES_MM[i] / (timeStamps[i] - timeStamps[i - 1]) * 1e6;
+        float distance = DISTANCESCM[i] - DISTANCESCM[i - 1];
+        float time_s = (timeStamps[i] - timeStamps[i - 1]) / 1e6;
+        velocities[idx] = (distance / 100.0) / time_s;
       }
       if (i == SENSOR_COUNT - 1)
       {
