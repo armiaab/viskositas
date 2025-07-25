@@ -13,7 +13,7 @@ enum InputDevice : uint8_t
   PushButton = 11,
 };
 
-constexpr uint16_t DISTANCES_MM[] = {0, 3, 4, 5, 6, 7};
+constexpr float DISTANCES_MM[] = {0, 14, 7, 7, 5, 4.4};
 constexpr uint16_t SENSOR_COUNT =
     sizeof(DISTANCES_MM) / sizeof(DISTANCES_MM[0]);
 constexpr int Sensors[] = {InputDevice::Sensor1, InputDevice::Sensor2, InputDevice::Sensor3,
@@ -35,9 +35,6 @@ void ResetExperiment()
   memset(triggered, 0, sizeof(triggered));
   memset(velocities, 0, sizeof(velocities));
   memset(timeStamps, 0, sizeof(timeStamps));
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Alat siap pakai");
 }
 
 void PrintResults()
@@ -86,17 +83,22 @@ void setup()
   pinMode(InputDevice::PushButton, INPUT_PULLUP);
 
   ResetExperiment();
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Alat siap pakai");
 }
 
 void loop()
 {
   static bool isExperimentRunning = false;
   static unsigned long startTime = 0;
+  static unsigned long elapsed = 0;
 
-  if (!isExperimentRunning && digitalRead(InputDevice::PushButton))
+  if (!isExperimentRunning && !digitalRead(InputDevice::PushButton))
   {
     delay(50);
-    if (!digitalRead(InputDevice::PushButton))
+    if (digitalRead(InputDevice::PushButton))
       return;
     isExperimentRunning = true;
     startTime = micros();
@@ -108,8 +110,6 @@ void loop()
   if (!isExperimentRunning)
     return;
 
-  unsigned long elapsed = micros() - startTime;
-
   bool states[SENSOR_COUNT];
   for (size_t i = 0; i < SENSOR_COUNT; i++)
   {
@@ -118,7 +118,10 @@ void loop()
       states[i] = !input;
     else
       states[i] = input;
+    delay(10);
   }
+
+  elapsed = micros() - startTime;
 
   for (size_t i = 0; i < SENSOR_COUNT; i++)
   {
@@ -129,8 +132,7 @@ void loop()
       if (i > 0)
       {
         size_t idx = i - 1;
-        velocities[idx] = float(DISTANCES_MM[idx]) /
-                          ((timeStamps[i] - timeStamps[i - 1]));
+        velocities[idx] = DISTANCES_MM[i] / (timeStamps[i] - timeStamps[i - 1]) * 1e6;
       }
       if (i == SENSOR_COUNT - 1)
       {
@@ -138,6 +140,15 @@ void loop()
         ResetExperiment();
         isExperimentRunning = false;
       }
+      Serial.print("Sensor ");
+      Serial.print(i + 1);
+      Serial.print(" triggered at ");
+      Serial.print(timeStamps[i]);
+      Serial.print(" us, velocity: ");
+      if (i > 0)
+        Serial.println(velocities[i - 1], 2);
+      else
+        Serial.println("N/A");
       break;
     }
   }
