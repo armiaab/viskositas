@@ -13,7 +13,7 @@ enum InputDevice : uint8_t
   PushButton = 11,
 };
 
-constexpr float DISTANCESCM[] = {0, 14, 21, 28, 33, 37.4};
+constexpr float DISTANCESCM[] = {0, 14.3, 21.8, 29.3, 35, 39.8};
 constexpr uint16_t SENSOR_COUNT =
     sizeof(DISTANCESCM) / sizeof(DISTANCESCM[0]);
 constexpr int Sensors[] = {InputDevice::Sensor1, InputDevice::Sensor2, InputDevice::Sensor3,
@@ -23,7 +23,7 @@ unsigned long timeStamps[SENSOR_COUNT];
 float velocities[SENSOR_COUNT - 1];
 bool triggered[SENSOR_COUNT] = {};
 
-constexpr float r_bola = 0.5e-3;
+constexpr float r_bola = 0.005;
 constexpr float rho_fluida = 1260.0;
 constexpr float rho_bola = 7850.0;
 constexpr float gravity = 9.8;
@@ -53,25 +53,40 @@ void PrintResults()
     Serial.print("v");
     Serial.print(i + 1);
     Serial.print(": ");
-    Serial.println(velocities[i], 2);
+    Serial.println(velocities[i], 6);
     sum += velocities[i];
   }
   Serial.println("END_DATA");
 
-  float v_avg = sum / (SENSOR_COUNT - 1);
-  float viscosity = (2.0 / 9.0) * gravity * (r_bola * r_bola) * (rho_bola - rho_fluida) / v_avg;
+  float v_avg = 0.0;
+  if (SENSOR_COUNT > 1)
+    v_avg = sum / (SENSOR_COUNT - 1);
+
+  float viscosity = 0.0;
+  if (v_avg > 0.0001)
+    viscosity = (2.0 / 9.0) * gravity * (r_bola * r_bola) * (rho_bola - rho_fluida) / v_avg;
+
   Serial.print("V rata-rata: ");
-  Serial.println(v_avg, 2);
+  Serial.println(v_avg, 6);
   Serial.print("Viscositas: ");
-  Serial.println(viscosity, 2);
+  Serial.println(viscosity, 6);
+  Serial.print("Formula components: ");
+  Serial.print("2/9=");
+  Serial.print(2.0 / 9.0, 4);
+  Serial.print(" g=");
+  Serial.print(gravity, 4);
+  Serial.print(" r²=");
+  Serial.print(r_bola * r_bola, 6);
+  Serial.print(" Δρ=");
+  Serial.println(rho_bola - rho_fluida, 1);
 
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("V: ");
-  lcd.print(velocities[SENSOR_COUNT - 2], 2);
+  lcd.print(velocities[SENSOR_COUNT - 2], 6);
   lcd.setCursor(0, 1);
   lcd.print("Vis: ");
-  lcd.print(viscosity, 2);
+  lcd.print(viscosity, 6);
 }
 
 void setup()
@@ -133,9 +148,25 @@ void loop()
       if (i > 0)
       {
         size_t idx = i - 1;
-        float distance = DISTANCESCM[i] - DISTANCESCM[i - 1];
-        float time_s = (timeStamps[i] - timeStamps[i - 1]) / 1e6;
-        velocities[idx] = (distance / 100.0) / time_s;
+        float distance = DISTANCESCM[i] - DISTANCESCM[i - 1];     // cm
+        float time_s = (timeStamps[i] - timeStamps[i - 1]) / 1e6; // μs to s
+
+        if (time_s > 0.0001)
+        {
+          velocities[idx] = (distance / 100.0) / time_s; // cm to m
+
+          Serial.print("Distance: ");
+          Serial.print(distance);
+          Serial.print(" cm, Time: ");
+          Serial.print(time_s, 6);
+          Serial.print(" s, Velocity: ");
+          Serial.println(velocities[idx], 6);
+        }
+        else
+        {
+          velocities[idx] = 0.0;
+          Serial.println("Warning: Time difference too small!");
+        }
       }
       if (i == SENSOR_COUNT - 1)
       {
