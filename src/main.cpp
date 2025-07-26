@@ -66,20 +66,6 @@ void PrintResults()
   if (v_avg > 0.0001)
     viscosity = (2.0 / 9.0) * gravity * (r_bola * r_bola) * (rho_bola - rho_fluida) / v_avg;
 
-  Serial.print("V rata-rata: ");
-  Serial.println(v_avg, 6);
-  Serial.print("Viscositas: ");
-  Serial.println(viscosity, 6);
-  Serial.print("Formula components: ");
-  Serial.print("2/9=");
-  Serial.print(2.0 / 9.0, 4);
-  Serial.print(" g=");
-  Serial.print(gravity, 4);
-  Serial.print(" r²=");
-  Serial.print(r_bola * r_bola, 6);
-  Serial.print(" Δρ=");
-  Serial.println(rho_bola - rho_fluida, 1);
-
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("V: ");
@@ -141,49 +127,39 @@ void loop()
 
   for (size_t i = 0; i < SENSOR_COUNT; i++)
   {
-    if (states[i] && !triggered[i])
+    if (!states[i] || triggered[i])
+      continue;
+    timeStamps[i] = (i == 0 ? 0 : elapsed);
+    triggered[i] = true;
+    if (i > 0)
     {
-      timeStamps[i] = (i == 0 ? 0 : elapsed);
-      triggered[i] = true;
-      if (i > 0)
-      {
-        size_t idx = i - 1;
-        float distance = DISTANCESCM[i] - DISTANCESCM[i - 1];     // cm
-        float time_s = (timeStamps[i] - timeStamps[i - 1]) / 1e6; // μs to s
+      size_t idx = i - 1;
+      float distance = DISTANCESCM[i] - DISTANCESCM[i - 1];     // cm
+      float time_s = (timeStamps[i] - timeStamps[i - 1]) / 1e6; // μs to s
 
-        if (time_s > 0.0001)
-        {
-          velocities[idx] = (distance / 100.0) / time_s; // cm to m
-
-          Serial.print("Distance: ");
-          Serial.print(distance);
-          Serial.print(" cm, Time: ");
-          Serial.print(time_s, 6);
-          Serial.print(" s, Velocity: ");
-          Serial.println(velocities[idx], 6);
-        }
-        else
-        {
-          velocities[idx] = 0.0;
-          Serial.println("Warning: Time difference too small!");
-        }
-      }
-      if (i == SENSOR_COUNT - 1)
-      {
-        PrintResults();
-        ResetExperiment();
-        isExperimentRunning = false;
-      }
-      Serial.print("Sensor ");
-      Serial.print(i + 1);
-      Serial.print(" triggered at ");
-      Serial.print(timeStamps[i]);
-      Serial.print(" us, velocity: ");
-      if (i > 0)
-        Serial.println(velocities[i - 1], 2);
+      if (time_s > 0.0001)
+        velocities[idx] = (distance / 100.0) / time_s; // cm to m
       else
-        Serial.println("N/A");
-      break;
+        velocities[idx] = 0.0;
     }
+
+    Serial.print("Sensor ");
+    Serial.print(i + 1);
+    Serial.print(" triggered at ");
+    Serial.print(timeStamps[i]);
+    Serial.print(" us, velocity: ");
+
+    if (i > 0)
+      Serial.println(velocities[i - 1], 6);
+    else
+      Serial.println("N/A");
+
+    if (i == SENSOR_COUNT - 1)
+    {
+      PrintResults();
+      ResetExperiment();
+      isExperimentRunning = false;
+    }
+    break;
   }
 }
