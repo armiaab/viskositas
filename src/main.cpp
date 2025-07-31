@@ -23,7 +23,7 @@ unsigned long timeStamps[SENSOR_COUNT];
 float velocities[SENSOR_COUNT - 1];
 bool triggered[SENSOR_COUNT] = {};
 
-constexpr float r_bola = 0.005;
+constexpr float r_bola = 0.0077;
 constexpr float rho_fluida = 1260.0;
 constexpr float rho_bola = 7850.0;
 constexpr float gravity = 9.8;
